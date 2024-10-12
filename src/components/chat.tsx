@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 
-export function Chat() {
+export function Chat({ chatId }: { chatId: String }) {
   const [messages, setMessages] = React.useState([
     {
       role: 'agent',
@@ -40,8 +40,8 @@ export function Chat() {
               <AvatarFallback>OM</AvatarFallback>
             </Avatar>
             <div>
-              <p className='text-sm font-medium leading-none'>Sofia Davis</p>
-              <p className='text-sm text-muted-foreground'>m@example.com</p>
+              <p className='text-sm font-medium leading-none'>{chatId}</p>
+              <p className='text-sm text-muted-foreground'>{chatId}@gmail.com</p>
             </div>
           </div>
         </CardHeader>

@@ -1,8 +1,43 @@
-import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Input } from './ui/input'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { IoIosNotificationsOutline } from 'react-icons/io'
-import { ThemeToggle } from '@/components/ThemeToogle'
+import { ThemeToggle } from './ThemeToogle'
+import Link from 'next/link'
 
+const chats = [
+  {
+    id: '1',
+    username: 'Sahil',
+    image: 'https://picsum.photos/200',
+    message: 'Hey there!',
+    timestamp: '12:00 PM',
+    unread: true
+  },
+  {
+    id: '2',
+    username: 'Ajay',
+    image: 'https://picsum.photos/200',
+    message: 'Hello!',
+    timestamp: '11:59 PM',
+    unread: false
+  },
+  {
+    id: '3',
+    username: 'Suresh',
+    image: 'https://picsum.photos/200',
+    message: 'Hi!',
+    timestamp: '11:58 PM',
+    unread: true
+  },
+  {
+    id: '4',
+    username: 'Raina Suresh Ji Cricket',
+    image: 'https://picsum.photos/200',
+    message: 'Hey there, I have a new message',
+    timestamp: '11:57 PM',
+    unread: false
+  }
+]
 export default function Sidebar() {
   return (
     <section className='h-[97vh]'>
@@ -33,17 +68,20 @@ export default function Sidebar() {
         <Input placeholder='Search' />
       </div>
 
-      <div className='duration-2200 mt-3 flex gap-3 rounded-md p-2 px-2 transition-colors hover:bg-accent'>
-        <Avatar>
-          <AvatarImage src='https://github.com/shadcn.png' />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
 
-        <div>
-          <h3>Joe</h3>
-          <div className='text-xs font-light dark:text-zinc-300'>Hey!!!</div>
-        </div>
-      </div>
+      {chats.map((chat, index) => {
+        return <Link href={`/chat/${chat.id}`} key={index} className='duration-2200 mt-3 flex gap-3 rounded-md p-2 px-2 transition-colors hover:bg-accent'>
+          <Avatar>
+            <AvatarImage src={`https://randomuser.me/api/portraits/thumb/men/${index}.jpg`} />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+
+          <div>
+            <h3>{chat.username}</h3>
+            <div className='text-xs font-light dark:text-zinc-300'>{chat.message}</div>
+          </div>
+        </Link>
+      })}
     </section>
   )
 }
