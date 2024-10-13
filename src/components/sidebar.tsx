@@ -1,10 +1,11 @@
 import { Input } from './ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { IoIosNotificationsOutline } from 'react-icons/io'
+import { FiUserPlus } from "react-icons/fi";
 import { ThemeToggle } from './ThemeToogle'
 import Link from 'next/link'
+import { getServerSession } from 'next-auth'
 
-const chats = [
+const users = [
   {
     id: '1',
     username: 'Sahil',
@@ -38,25 +39,26 @@ const chats = [
     unread: false
   }
 ]
-export default function Sidebar() {
+export default async function Sidebar() {
+  const session = await getServerSession();
   return (
-    <section className='h-[97vh]'>
-      <div className='flex items-center justify-between p-4'>
+    <section className='h-[97vh] bg-zinc-50'>
+      <div className='flex items-center justify-between p-4 gap-2'>
         <div className='flex cursor-pointer items-center justify-center gap-2 rounded-lg p-2 px-1'>
           <Avatar className=' size-10'>
-            <AvatarImage src='https://github.com/shadcn.png' />
+            <AvatarImage src={session?.user?.image as string} />
             <AvatarFallback delayMs={600}>CN</AvatarFallback>
           </Avatar>
           <div className='flex-col text-sm'>
-            <h2>Ajay</h2>
+            <h2>{session?.user?.name}</h2>
             <span className='text-xs font-light dark:text-zinc-300'>
-              @5823138
+              {session?.user?.email}
             </span>
           </div>
         </div>
-        <div className='flex gap-1'>
-          <div className='rounded-full p-1.5 hover:bg-accent'>
-            <IoIosNotificationsOutline size={24} />
+        <div className='flex items-center'>
+          <div className='rounded-full p-2 hover:bg-accent'>
+            <FiUserPlus size={21} />
           </div>
           <div>
             <ThemeToggle />
@@ -68,17 +70,18 @@ export default function Sidebar() {
         <Input placeholder='Search' />
       </div>
 
+      {!users && <h1 className='text-center font-normal p-2 mt-14 opacity-85 h-full'>No Friends!</h1>}
 
-      {chats.map((chat, index) => {
-        return <Link href={`/chat/${chat.id}`} key={index} className='duration-2200 mt-3 flex gap-3 rounded-md p-2 px-2 transition-colors hover:bg-accent'>
+      {users?.map((user, index) => {
+        return <Link href={`/chat/${user.id}`} key={user.id} className='duration-2200 mt-3 flex gap-3 rounded-md p-2 px-2 transition-colors hover:bg-accent'>
           <Avatar>
             <AvatarImage src={`https://randomuser.me/api/portraits/thumb/men/${index}.jpg`} />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
 
           <div>
-            <h3>{chat.username}</h3>
-            <div className='text-xs font-light dark:text-zinc-300'>{chat.message}</div>
+            <h3>{user.username}</h3>
+            <div className='text-xs font-light dark:text-zinc-300'>{user.message}</div>
           </div>
         </Link>
       })}

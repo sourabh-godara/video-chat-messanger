@@ -26,7 +26,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt'
   },
-  adapter: PrismaAdapter(prisma) as Adapter, //Primsa Pending
+  adapter: PrismaAdapter(prisma) as Adapter,
 
   callbacks: {
     async jwt({ token, user }) {
