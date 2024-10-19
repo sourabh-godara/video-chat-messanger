@@ -1,9 +1,6 @@
-'use client'
-import FriendModal from '@/components/friend-modal';
-import React, { useState } from 'react'
+import React from 'react'
 
 export default function Page() {
-
     return (
         <>
             <section className='flex h-full flex-col items-center justify-center rounded-lg border border-stone-200 dark:border-stone-800 dark:bg-stone-950'>
