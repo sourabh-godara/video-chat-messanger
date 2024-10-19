@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ friendRequestsSent  FriendRequest[] @relation("FriendRequestsSent")
+  friendRequestsReceived FriendRequest[] @relation("FriendRequestsReceived")
+  friendsInitiated      Friendship[]      @relation("UserFriendsInitiated")
+  friendsAccepted       Friendship[]      @relation("UserFriendsAccepted")
+  blockedUsers      BlockedUser[]   @relation("BlockedBy")
+  blockedBy         BlockedUser[]   @relation("Blocking")
+  messagesSent      Message[]       @relation("MessagesSent")
+  messagesReceived  Message[]       @relation("MessagesReceived")
+}
+
+model FriendRequest {
+  id         String      @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+  
+  sender     User     @relation("FriendRequestsSent", fields: [senderId], references: [id])
+  receiver   User     @relation("FriendRequestsReceived", fields: [receiverId], references: [id])
+}
+
+model Friendship {
+  id         String      @id @default(cuid())
+  userId     String
+  friendId   String
+  
+  user       User     @relation("UserFriendsInitiated", fields: [userId], references: [id])
+  friend     User     @relation("UserFriendsAccepted", fields: [friendId], references: [id])
+  
+  @@unique([userId, friendId])
+}
+
+model BlockedUser {
+  id         String      @id @default(cuid())
+  blockerId  String
+  blockedId  String
+  
+  blocker    User     @relation("BlockedBy", fields: [blockerId], references: [id])
+  blocked    User     @relation("Blocking", fields: [blockedId], references: [id])
+  
+  @@unique([blockerId, blockedId])
+}
+
+model Message {
+  id         String      @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  createdAt  DateTime @default(now())
+  
+  sender     User     @relation("MessagesSent", fields: [senderId], references: [id])
+  receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id])
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+ 
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
