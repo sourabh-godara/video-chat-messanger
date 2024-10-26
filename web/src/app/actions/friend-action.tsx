@@ -5,14 +5,7 @@ import { FriendRequestsType } from "@/types";
 import { FriendRequestStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/database"
-
-async function getUserIdFromSession() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user.id) {
-        throw new Error('User is not authenticated');
-    }
-    return session.user.id;
-}
+import { getUserIdFromSession } from "@/lib";
 
 //NEED IMPROVEMENT
 export async function fetchFriends() {

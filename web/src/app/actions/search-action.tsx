@@ -2,10 +2,12 @@
 import { User } from '@/types';
 import { PrismaClient } from '@prisma/client'
 import { fetchFriends } from './friend-action';
+import { getUserIdFromSession } from '@/lib';
 
 const prisma = new PrismaClient({})
 
-export default async function searchUser(query: string, loggedInUserId: string): Promise<User[]> {
+export default async function searchUser(query: string): Promise<User[]> {
+    const loggedInUserId = await getUserIdFromSession();
     if (!query || !loggedInUserId) {
         throw new Error('Query and UserId are required');
     }

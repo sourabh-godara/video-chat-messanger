@@ -2,7 +2,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import searchUser from '../app/actions/search-action';
 import { FriendRequestsType, User } from '@/types';
-import { useSession } from 'next-auth/react';
 import SearchResultCard from './search-result-card';
 import LoadingSpinner from './ui/loading-spinner';
 
@@ -14,19 +13,18 @@ export default function SearchFriend({ friendRequests, searchQuery }: props) {
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [error, setError] = useState<string | undefined>()
     const [loading, setLoading] = useState(false);
-    const { data: session } = useSession();
 
     const handleSearch = useCallback(async () => {
         try {
             setLoading(true);
-            const users = await searchUser(searchQuery, session?.user.id);
+            const users = await searchUser(searchQuery);
             setFilteredUsers(users);
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Something went wrong.');
         } finally {
             setLoading(false);
         }
-    }, [searchQuery, session?.user.id]);
+    }, [searchQuery]);
 
     useEffect(() => {
         if (searchQuery) {

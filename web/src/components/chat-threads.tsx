@@ -15,7 +15,6 @@ export default function ChatThreads() {
         const fetchChatThreads = async () => {
             try {
                 const res = await fetchFriends();
-                console.log(res);
                 setFriends(res);
             } catch (error) {
                 setError(error instanceof Error ? error.message : 'Something went wrong.');
