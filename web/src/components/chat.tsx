@@ -1,13 +1,12 @@
 'use client'
 import { useState } from 'react'
-import { Check, Plus, Send, User } from 'lucide-react'
+import { Send, User } from 'lucide-react'
 
-import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from './ui/scroll-area'
+import { ChatType } from '@/types'
 interface ChatMessage {
   id: number
   sender: string
@@ -22,7 +21,7 @@ const chatMessages: ChatMessage[] = [
   { id: 4, sender: "User", content: "I can't log in.", isUser: true },
 ]
 
-export function Chat({ chatId }: { chatId: String }) {
+export function Chat({ chat }: { chat: ChatType }) {
   const [messages, setMessages] = useState<ChatMessage[]>(chatMessages)
   const [newMessage, setNewMessage] = useState("")
 
@@ -43,8 +42,8 @@ export function Chat({ chatId }: { chatId: String }) {
               <AvatarFallback>{'SS'}</AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-sm font-medium">{chatId}</h2>
-              <p className="text-sm text-muted-foreground">{chatId}@gmail.com</p>
+              <h2 className="text-sm font-medium">{chat.user?.name}</h2>
+              <p className="text-sm text-muted-foreground">{chat.user?.email}</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="md:hidden">
@@ -53,7 +52,7 @@ export function Chat({ chatId }: { chatId: String }) {
         </header>
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
-            {messages.map((message) => (
+            {messages?.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}

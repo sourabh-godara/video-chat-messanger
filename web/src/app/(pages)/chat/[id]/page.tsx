@@ -1,15 +1,17 @@
 import { Chat } from '@/components/chat'
 import React from 'react'
+import { fetchChats } from '@/app/actions/chat-actions'
 
 type params = {
   params: {
-    id: String
+    id: string
   }
 }
-export default function page({ params }: params) {
+export default async function page({ params }: params) {
+  const chat = await fetchChats(params.id);
   return (
     <>
-      <Chat chatId={params.id} />
+      <Chat chat={chat} />
     </>
   )
 }

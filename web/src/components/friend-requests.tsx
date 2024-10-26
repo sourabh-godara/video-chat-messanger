@@ -1,43 +1,74 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
+import { ReceivedFriendRequests } from '@/types';
+import { FriendRequestStatus } from '@prisma/client';
+import { respondToFriendRequest } from '@/app/actions/friend-action';
+import { useToast } from '@/components/hooks/use-toast';
+import LoadingSpinner from './ui/loading-spinner';
 
-const incomingRequests = [
-    { id: 1, name: 'Alice Johnson', avatar: '/placeholder.svg?height=40&width=40' },
-    { id: 2, name: 'Bob Smith', avatar: '/placeholder.svg?height=40&width=40' },
-    { id: 3, name: 'Charlie Brown', avatar: '/placeholder.svg?height=40&width=40' },
-]
-export default function FriendRequests() {
+interface Props {
+    receivedRequests: ReceivedFriendRequests[]
+    onUpdateReceivedRequests: (requests: ReceivedFriendRequests[]) => void
+}
+export default function FriendRequests({ receivedRequests, onUpdateReceivedRequests }: Props) {
+    const [loading, setLoading] = useState(false);
+    const [newFriend, setNewFriend] = useState<string>('');
+    const { toast } = useToast()
+    const handleRequest = async (requestId: string, status: FriendRequestStatus) => {
+        if (status === FriendRequestStatus.ACCEPTED) {
+            setNewFriend(requestId)
+        } else {
+            const updatedReceivedRequests = receivedRequests.filter(
+                (request) => request.id !== requestId
+            );
+            onUpdateReceivedRequests(updatedReceivedRequests);
+        }
+        try {
+            setLoading(true)
+            await respondToFriendRequest(requestId, status)
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Uh oh! Something went wrong.",
+                description: error instanceof Error ? error.message : 'Something went wrong.',
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
     return (
         <>
-
             <h3 className="text-lg font-semibold mb-4">Friend Requests</h3>
             <ul className="space-y-3">
-                {incomingRequests.map(request => (
-                    <li key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg transition-all hover:bg-gray-100">
+                {receivedRequests.map(({ id, sender }) => (
+                    <li key={id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-900 rounded-lg transition-all hover:bg-gray-100">
                         <div className="flex items-center space-x-3">
                             <Avatar>
-                                <AvatarImage src={request.avatar} alt={request.name} />
-                                <AvatarFallback>{request.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={sender.image!} alt={sender.name!} />
+                                <AvatarFallback>{sender.name!.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <span className="font-medium">{request.name}</span>
+                            <span className="font-medium">{sender.name}</span>
                         </div>
-                        <div className="space-x-2">
-                            <Button size="sm" variant="outline" className="text-gray-600 hover:bg-green-100">
+                        {loading ? <LoadingSpinner /> : newFriend == id ? <>
+                            <Button size="sm" variant="outline" className="text-gray-800 bg-green-600 hover:bg-green-700">
+                                Friends
+                            </Button>
+                        </> : (<div className="space-x-2">
+                            <Button onClick={() => handleRequest(id, 'ACCEPTED')} size="sm" variant="outline" className="text-gray-600 hover:bg-green-100">
                                 Accept
                             </Button>
-                            <Button size="sm" variant="outline" className="text-gray-600 hover:bg-red-100">
+                            <Button onClick={() => handleRequest(id, 'DECLINED')} size="sm" variant="outline" className="text-gray-600 hover:bg-red-100">
                                 Decline
                             </Button>
-                        </div>
+                        </div>)}
+
                     </li>
                 ))}
             </ul>
-            {
-                incomingRequests.length === 0 && (
-                    <p className="text-center text-gray-500 mt-4">No pending friend requests</p>
-                )
-            }
+            {receivedRequests?.length === 0 && (
+                <p className="text-center text-gray-500 mt-4">No pending friend requests</p>
+            )}
         </>
     )
 

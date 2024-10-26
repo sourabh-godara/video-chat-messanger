@@ -32,6 +32,9 @@ model User {
   blockedBy         BlockedUser[]   @relation("Blocking")
   messagesSent      Message[]       @relation("MessagesSent")
   messagesReceived  Message[]       @relation("MessagesReceived")
+
+  @@index([name])
+  @@index([email])
 }
 
 model FriendRequest {
@@ -43,6 +46,8 @@ model FriendRequest {
   
   sender     User     @relation("FriendRequestsSent", fields: [senderId], references: [id])
   receiver   User     @relation("FriendRequestsReceived", fields: [receiverId], references: [id])
+
+  @@index([senderId, receiverId]) 
 }
 
 model Friendship {
@@ -53,7 +58,9 @@ model Friendship {
   user       User     @relation("UserFriendsInitiated", fields: [userId], references: [id])
   friend     User     @relation("UserFriendsAccepted", fields: [friendId], references: [id])
   
+  
   @@unique([userId, friendId])
+   @@index([userId, friendId]) 
 }
 
 model BlockedUser {
@@ -76,6 +83,8 @@ model Message {
   
   sender     User     @relation("MessagesSent", fields: [senderId], references: [id])
   receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id])
+
+   @@index([senderId, receiverId]) 
 }
 
 enum FriendRequestStatus {
