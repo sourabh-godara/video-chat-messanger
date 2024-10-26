@@ -76,8 +76,8 @@ export async function respondToFriendRequest(requestId: string, response: Friend
     }
 }
 
-export async function sendRequest(senderId: string, receiverEmail: string) {
-
+export async function sendRequest(receiverEmail: string) {
+    const senderId = await getUserIdFromSession();
     if (!senderId || !receiverEmail) {
         throw new Error('Sender ID and receiver email are required');
     }
