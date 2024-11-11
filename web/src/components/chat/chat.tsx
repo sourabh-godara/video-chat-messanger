@@ -5,7 +5,7 @@ import { Send, User } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ScrollArea } from './ui/scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChatType } from '@/types'
 interface ChatMessage {
   id: number

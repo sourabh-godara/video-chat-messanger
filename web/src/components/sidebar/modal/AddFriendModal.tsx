@@ -1,17 +1,17 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogTrigger } from './ui/dialog'
-import { Button } from './ui/button'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Search, UserPlus, X } from 'lucide-react'
-import { Input } from './ui/input'
-import { ScrollArea } from './ui/scroll-area'
-import FriendRequests from './friend-requests'
-import SearchFriend from './search-friend'
-import { fetchFriendRequests } from '@/app/actions/friend-action'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import FriendRequests from './FriendRequests'
+import SearchFriend from './SearchFriend'
+import { fetchFriendRequests } from '@/actions/friend-action'
 import { FriendRequestsType, ReceivedFriendRequests } from '@/types'
 import { DialogTitle } from '@radix-ui/react-dialog'
 
-export default function AddFriend() {
+export default function AddFriendModal() {
     const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState<string>('')
     const [error, setError] = useState<string | undefined>()

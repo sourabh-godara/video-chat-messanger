@@ -1,9 +1,9 @@
 'use client'
 import React, { useCallback, useEffect, useState } from 'react'
-import searchUser from '../app/actions/search-action';
+import searchUser from '@/actions/search-action';
 import { FriendRequestsType, User } from '@/types';
-import SearchResultCard from './search-result-card';
-import LoadingSpinner from './ui/loading-spinner';
+import SearchResultCard from './SearchResults';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 interface props {
     searchQuery: string,

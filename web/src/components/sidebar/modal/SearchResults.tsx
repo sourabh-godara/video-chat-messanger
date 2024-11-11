@@ -1,11 +1,11 @@
-import { sendRequest } from '@/app/actions/friend-action';
+import { sendRequest } from '@/actions/friend-action';
 import React, { useState } from 'react'
-import { useToast } from './hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Button } from './ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { UserCheck, UserPlus } from 'lucide-react';
 import { FriendRequestsType, User } from '@/types';
-import LoadingSpinner from './ui/loading-spinner';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 interface Props {
     users: User[]

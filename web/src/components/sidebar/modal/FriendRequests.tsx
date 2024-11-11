@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Button } from './ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui//button';
 import { ReceivedFriendRequests } from '@/types';
 import { FriendRequestStatus } from '@prisma/client';
-import { respondToFriendRequest } from '@/app/actions/friend-action';
-import { useToast } from '@/components/hooks/use-toast';
-import LoadingSpinner from './ui/loading-spinner';
+import { respondToFriendRequest } from '@/actions/friend-action';
+import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 interface Props {
     receivedRequests: ReceivedFriendRequests[]

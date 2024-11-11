@@ -1,9 +1,7 @@
 'use server'
 
-import { authOptions } from "@/lib/authOptions";
 import { FriendRequestsType } from "@/types";
 import { FriendRequestStatus } from "@prisma/client";
-import { getServerSession } from "next-auth";
 import prisma from "@/lib/database"
 import { getUserIdFromSession } from "@/lib";
 

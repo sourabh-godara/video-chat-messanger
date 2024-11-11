@@ -1,10 +1,10 @@
 'use client'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { fetchFriends } from '@/app/actions/friend-action'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { fetchFriends } from '@/actions/friend-action'
 import { FriendType } from '@/types'
-import { Skeleton } from './ui/skeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ChatThreads() {
     const [friends, setFriends] = useState<FriendType[]>([])

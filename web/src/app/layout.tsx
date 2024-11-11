@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css'
+import '@/styles/globals.css'
 import { ThemeProvider } from '@/components/ui/theme-provider'
 import { Toaster } from "@/components/ui/toaster"
 import { getServerSession } from 'next-auth'
 import { SocketProvider } from '@/context/SocketProvider'
 import SessionProvider from '@/context/SessionProvider'
-import { fetchFriends } from './actions/friend-action'
+import AppLayout from '@/components/AppLayout'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -33,7 +33,9 @@ export default async function RootLayout({
         >
           <SocketProvider>
             <SessionProvider session={session}>
-              {children}
+              <AppLayout>
+                {children}
+              </AppLayout>
               <Toaster />
             </SessionProvider>
           </SocketProvider>

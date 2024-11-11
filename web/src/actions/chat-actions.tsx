@@ -1,5 +1,5 @@
 'use server'
-import { Chat } from "@/components/chat";
+import { Chat } from "@/components/chat/chat";
 import { authOptions } from "@/lib/authOptions";
 import prisma from "@/lib/database"
 import { ChatType } from "@/types";

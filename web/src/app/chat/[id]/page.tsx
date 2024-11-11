@@ -1,6 +1,6 @@
-import { Chat } from '@/components/chat'
+import { Chat } from '@/components/chat/chat'
 import React from 'react'
-import { fetchChats } from '@/app/actions/chat-actions'
+import { fetchChats } from '@/actions/chat-actions'
 
 type params = {
   params: {
