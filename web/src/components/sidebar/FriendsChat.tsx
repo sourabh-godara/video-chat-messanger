@@ -5,25 +5,23 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { fetchFriends } from '@/actions/friend-action'
 import { FriendType } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
+import useFriendsStore from '@/hooks/friend-store'
 
 export default function ChatThreads() {
-    const [friends, setFriends] = useState<FriendType[]>([])
-    const [error, setError] = useState<string | undefined>()
-    const [isLoading, setIsLoading] = useState(true)
+    const { friends, setFriends, isLoading } = useFriendsStore();
+    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchChatThreads = async () => {
-            try {
-                const res = await fetchFriends();
-                setFriends(res);
-            } catch (error) {
-                setError(error instanceof Error ? error.message : 'Something went wrong.');
-            } finally {
-                setIsLoading(false);
+    /*     useEffect(() => {
+            const fetchChatThreads = async () => {
+                try {
+                    const res = await fetchFriends();
+                    setFriends(res);
+                } catch (error) {
+                    setError(error instanceof Error ? error.message : 'Something went wrong.');
+                }
             }
-        }
-        fetchChatThreads();
-    }, [])
+            fetchChatThreads();
+        }, []) */
 
     if (isLoading) {
         return <LoadingSkeleton />
@@ -33,7 +31,7 @@ export default function ChatThreads() {
     }
     return (
         <div>
-            {friends?.map(({ friend }) => (
+            {friends?.map((friend) => (
                 <Link
                     href={`/chat/${friend.id}`}
                     key={friend.id}
