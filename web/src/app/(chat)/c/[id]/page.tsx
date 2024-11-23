@@ -9,9 +9,12 @@ type params = {
 }
 export default async function page({ params }: params) {
   const chat = await fetchChats(params.id);
+  if (!chat) {
+    return <p className='m-auto'>Something Went Wrong!</p>
+  }
   return (
     <>
-      <Chat chat={chat} />
+      <Chat user={chat.user} chat={chat.messages} receiverId={params.id} />
     </>
   )
 }

@@ -1,9 +1,9 @@
 'use server'
-import { Chat } from "@/components/chat/chat";
 import { authOptions } from "@/lib/authOptions";
 import prisma from "@/lib/database"
 import { ChatType } from "@/types";
 import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
 async function getUserIdFromSession() {
     const session = await getServerSession(authOptions);
@@ -13,11 +13,24 @@ async function getUserIdFromSession() {
     return session.user.id;
 }
 
-export async function fetchChats(friendId: string): Promise<ChatType> {
+export async function fetchChats(friendId: string): Promise<ChatType | null> {
     const userId = await getUserIdFromSession();
     if (!userId) {
         throw new Error('User is not authenticated');
     }
+    const friendship = await prisma.friendship.findFirst({
+        where: {
+            OR: [
+                { userId: userId, friendId: friendId },
+                { userId: friendId, friendId: userId }
+            ]
+        }
+    });
+
+    if (!friendship) {
+        return redirect('/')
+    }
+
     try {
         const [user, messages] = await Promise.all([
             prisma.user.findUnique({

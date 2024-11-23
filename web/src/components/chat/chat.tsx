@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChatType } from '@/types'
+import { useSession } from 'next-auth/react'
 interface ChatMessage {
   id: number
   sender: string
@@ -21,13 +22,21 @@ const chatMessages: ChatMessage[] = [
   { id: 4, sender: "User", content: "I can't log in.", isUser: true },
 ]
 
-export function Chat({ chat }: { chat: ChatType }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(chatMessages)
+interface ChatProps {
+  user: ChatType['user'],
+  chat: ChatType['messages']
+  receiverId: string
+}
+
+export function Chat({ user, chat, receiverId }: ChatProps) {
+  const [messages, setMessages] = useState(chat)
   const [newMessage, setNewMessage] = useState("")
+  const { data } = useSession();
+  const loggedInUserId = data?.user.id;
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      setMessages([...messages, { id: messages.length + 1, sender: "User", content: newMessage, isUser: true }])
+      setMessages([...messages, { id: messages.length + '1', senderId: loggedInUserId, receiverId: receiverId, content: newMessage, createdAt: Date.now() }])
       setNewMessage("")
     }
   }
@@ -42,8 +51,8 @@ export function Chat({ chat }: { chat: ChatType }) {
               <AvatarFallback>{'SS'}</AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-sm font-medium">{chat.user?.name}</h2>
-              <p className="text-sm text-muted-foreground">{chat.user?.email}</p>
+              <h2 className="text-sm font-medium">{user?.name}</h2>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="md:hidden">
@@ -55,10 +64,10 @@ export function Chat({ chat }: { chat: ChatType }) {
             {messages?.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.senderId == loggedInUserId ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`rounded-lg px-4 py-2 max-w-[70%] ${message.isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  className={`rounded-lg px-4 py-2 max-w-[70%] ${message.senderId == loggedInUserId ? 'bg-primary text-primary-foreground' : 'bg-muted'
                     }`}
                 >
                   {message.content}
