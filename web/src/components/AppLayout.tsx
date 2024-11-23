@@ -2,7 +2,7 @@ import React from 'react'
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import ChatThreads from '@/components/sidebar/FriendsChat';
+import ChatList from '@/components/sidebar/ChatList';
 import ProfileCard from '@/components/sidebar/ProfileCard';
 import AddFriendModal from '@/components/sidebar/modal/AddFriendModal';
 
@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
             </div>
             <ScrollArea className="h-[calc(100vh-8rem)]">
-                <ChatThreads />
+                <ChatList />
             </ScrollArea>
         </div>
     ));
