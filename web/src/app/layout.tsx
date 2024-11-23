@@ -6,7 +6,6 @@ import { Toaster } from "@/components/ui/toaster"
 import { getServerSession } from 'next-auth'
 import { SocketProvider } from '@/context/SocketProvider'
 import SessionProvider from '@/context/SessionProvider'
-import AppLayout from '@/components/AppLayout'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,14 +30,10 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SocketProvider>
-            <SessionProvider session={session}>
-              <AppLayout>
-                {children}
-              </AppLayout>
-              <Toaster />
-            </SessionProvider>
-          </SocketProvider>
+          <SessionProvider session={session}>
+            {children}
+            <Toaster />
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

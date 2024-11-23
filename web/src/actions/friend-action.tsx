@@ -7,24 +7,21 @@ import { getUserIdFromSession } from "@/lib";
 
 //NEED IMPROVEMENT
 export async function fetchFriends() {
-    const userId = await getUserIdFromSession();
-    const friends = await prisma.friendship.findMany({
-        where: {
-            userId: userId,
-        },
-        select: {
-            friend: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true,
-                },
-            },
-        },
-    });
-
-    return friends
+    try {
+        const userId = await getUserIdFromSession();
+        const res = await prisma.friendship.findMany({
+            where: { userId },
+            include: {
+                friend: {
+                    select: { id: true, name: true, email: true, image: true }
+                }
+            }
+        });
+        const friends = res.map(f => f.friend);
+        return friends;
+    } catch (error) {
+        throw new Error('Something went wrong while fetching friends!');
+    }
 }
 
 //NEED IMPROVEMENT

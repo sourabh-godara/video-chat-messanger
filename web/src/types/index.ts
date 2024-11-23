@@ -6,12 +6,10 @@ export interface User {
   createdAt: Date
 }
 export interface FriendType {
-  friend: {
-    id: string
-    name: string | null
-    email: string
-    image: string | null
-  }
+  id: string
+  name: string | null
+  email: string
+  image: string | null
 }
 export interface ReceivedFriendRequests {
   createdAt: Date

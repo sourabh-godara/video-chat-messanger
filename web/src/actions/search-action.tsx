@@ -1,7 +1,6 @@
 'use server'
 import { User } from '@/types';
 import { PrismaClient } from '@prisma/client'
-import { fetchFriends } from './friend-action';
 import { getUserIdFromSession } from '@/lib';
 
 const prisma = new PrismaClient({})
@@ -12,16 +11,12 @@ export default async function searchUser(query: string): Promise<User[]> {
         throw new Error('Query and UserId are required');
     }
     try {
-        const friends = await fetchFriends();
-        const friendIds = friends.flatMap(friendship =>
-            friendship.friend.id
-        );
         const users = await prisma.user.findMany({
             where: {
                 AND: [
                     {
                         id: {
-                            notIn: [...friendIds, loggedInUserId],
+                            notIn: [loggedInUserId],
                         },
                     },
                     {
@@ -30,6 +25,24 @@ export default async function searchUser(query: string): Promise<User[]> {
                             { email: { contains: query, mode: 'insensitive' } },
                         ],
                     },
+                    {
+                        NOT: {
+                            friendsInitiated: {
+                                some: {
+                                    friendId: loggedInUserId
+                                }
+                            }
+                        }
+                    },
+                    {
+                        NOT: {
+                            friendsAccepted: {
+                                some: {
+                                    userId: loggedInUserId
+                                }
+                            }
+                        }
+                    }
                 ],
             },
             select: {
@@ -41,8 +54,10 @@ export default async function searchUser(query: string): Promise<User[]> {
             },
             take: 10,
         });
+        console.log({ users })
         return users;
     } catch (error) {
+        console.log({ error })
         throw new Error('Error while searching user')
     }
 }
