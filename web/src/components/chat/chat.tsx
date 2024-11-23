@@ -8,19 +8,6 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChatType } from '@/types'
 import { useSession } from 'next-auth/react'
-interface ChatMessage {
-  id: number
-  sender: string
-  content: string
-  isUser: boolean
-}
-
-const chatMessages: ChatMessage[] = [
-  { id: 1, sender: "OM", content: "Hi, how can I help you today?", isUser: false },
-  { id: 2, sender: "User", content: "Hey, I'm having trouble with my account.", isUser: true },
-  { id: 3, sender: "OM", content: "What seems to be the problem?", isUser: false },
-  { id: 4, sender: "User", content: "I can't log in.", isUser: true },
-]
 
 interface ChatProps {
   user: ChatType['user'],
@@ -36,7 +23,6 @@ export function Chat({ user, chat, receiverId }: ChatProps) {
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      setMessages([...messages, { id: messages.length + '1', senderId: loggedInUserId, receiverId: receiverId, content: newMessage, createdAt: Date.now() }])
       setNewMessage("")
     }
   }

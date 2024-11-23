@@ -34,7 +34,7 @@ interface Messages {
   senderId: string
   receiverId: string
   content: string
-  createdAt: number
+  createdAt: Date
 }
 
 export interface ChatType {
