@@ -34,14 +34,16 @@ export default function Error({
                         />
                     </svg>
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Oops! Something went wrong</h2>
-                    <p className="mt-2 text-sm text-gray-600">{error.message}</p>
+                    <p className="mt-2 text-sm text-gray-600">Return to <Link href="/" className="font-medium text-indigo-600 hover:text-indigo-500">
+                        Home
+                    </Link> </p>
                 </div>
                 <div className="mt-8 space-y-6">
                     <Button onClick={() => reset()} className="w-full">
                         Try Again
                     </Button>
                     <p className="mt-2 text-sm text-gray-500">
-                        If you believe this is a mistake, please{" "}
+                        Report this to owner {" "}
                         <Link href="/contact" className="font-medium text-indigo-600 hover:text-indigo-500">
                             contact support
                         </Link>

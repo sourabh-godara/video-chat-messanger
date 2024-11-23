@@ -4,25 +4,8 @@ import { FriendRequestsType } from "@/types";
 import { FriendRequestStatus } from "@prisma/client";
 import prisma from "@/lib/database"
 import { getUserIdFromSession } from "@/lib";
-
-//NEED IMPROVEMENT
-export async function fetchFriends() {
-    try {
-        const userId = await getUserIdFromSession();
-        const res = await prisma.friendship.findMany({
-            where: { userId },
-            include: {
-                friend: {
-                    select: { id: true, name: true, email: true, image: true }
-                }
-            }
-        });
-        const friends = res.map(f => f.friend);
-        return friends;
-    } catch (error) {
-        throw new Error('Something went wrong while fetching friends!');
-    }
-}
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 //NEED IMPROVEMENT
 export async function respondToFriendRequest(requestId: string, response: FriendRequestStatus) {
@@ -55,6 +38,7 @@ export async function respondToFriendRequest(requestId: string, response: Friend
                 });
 
             }
+            revalidatePath('/')
             return await prisma.friendRequest.delete({
                 where: { id: requestId }
             });
@@ -136,3 +120,21 @@ export async function fetchFriendRequests(): Promise<FriendRequestsType> {
     }
 }
 
+export async function removeFriend(friendId: string) {
+    try {
+        const userId = await getUserIdFromSession();
+        await prisma.friendship.deleteMany({
+            where: {
+                OR: [
+                    { userId: userId, friendId: friendId },
+                    { userId: friendId, friendId: userId }
+                ]
+            }
+        });
+        revalidatePath('/');
+    } catch (error) {
+        console.log()
+        throw new Error('An unknown error occurred while fetching friend requests');
+    }
+    return redirect('/')
+}

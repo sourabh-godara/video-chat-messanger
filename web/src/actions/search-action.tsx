@@ -54,7 +54,6 @@ export default async function searchUser(query: string): Promise<User[]> {
             },
             take: 10,
         });
-        console.log({ users })
         return users;
     } catch (error) {
         console.log({ error })
