@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Send, User } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChatType } from '@/types'
 import { useSession } from 'next-auth/react'
+import { io } from 'socket.io-client'
 
 interface ChatProps {
   user: ChatType['user'],
@@ -20,12 +21,47 @@ export function Chat({ user, chat, receiverId }: ChatProps) {
   const [newMessage, setNewMessage] = useState("")
   const { data } = useSession();
   const loggedInUserId = data?.user.id;
+  const socket = io(process.env.NODE_ENV == 'production' ? process.env.NEXT_PUBLIC_SOCKET_SERVER : 'http://localhost:8530');
 
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (newMessage.trim()) {
+      setMessages(prevMessages => [...prevMessages, {
+        id: new Date().toISOString(), // More reliable unique ID
+        senderId: loggedInUserId,
+        receiverId: receiverId,
+        content: newMessage,
+        createdAt: new Date()
+      }])
+      socket.emit("msg", { msg: newMessage, receiverId });
       setNewMessage("")
     }
-  }
+  }, [newMessage, loggedInUserId, receiverId]);
+
+  useEffect(() => {
+    const handleMessage = (msg: any) => {
+      setMessages(prevMessages => [...prevMessages, {
+        id: new Date().toISOString(),
+        senderId: receiverId,
+        content: msg.msg,
+        receiverId: loggedInUserId,
+        createdAt: new Date()
+      }])
+    }
+    socket.on("connect", () => {
+      console.log('Socket Connected: ', socket.id);
+    });
+    if (loggedInUserId) {
+      console.log('listening to: ', loggedInUserId)
+      socket.on(loggedInUserId, handleMessage);
+    }
+    // Cleanup listeners
+    return () => {
+      socket.off("connect");
+      if (loggedInUserId) {
+        socket.off(loggedInUserId, handleMessage);
+      }
+    }
+  }, [loggedInUserId, receiverId])
 
   return (
     <>
@@ -50,10 +86,10 @@ export function Chat({ user, chat, receiverId }: ChatProps) {
             {messages?.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.senderId == loggedInUserId ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.senderId === loggedInUserId ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`rounded-lg px-4 py-2 max-w-[70%] ${message.senderId == loggedInUserId ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  className={`rounded-lg px-4 py-2 max-w-[70%] ${message.senderId === loggedInUserId ? 'bg-primary text-primary-foreground' : 'bg-muted'
                     }`}
                 >
                   {message.content}
@@ -86,3 +122,4 @@ export function Chat({ user, chat, receiverId }: ChatProps) {
     </>
   )
 }
+

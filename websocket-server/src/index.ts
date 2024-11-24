@@ -5,13 +5,17 @@ const PORT = 8530;
 const app = express();
 
 const httpServer = createServer(app);
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:3000",
+  },
+});
 
 io.on("connection", (socket) => {
   console.log("Connection established");
-  socket.on("hey", (msg) => {
-    console.log({ msg });
-    io.emit("hey", "hey message");
+  socket.on("msg", (msg) => {
+    console.log(msg);
+    io.emit(msg.receiverId, msg);
   });
   socket.on("disconnect", () => {
     console.log("Connection closed");
