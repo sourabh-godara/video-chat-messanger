@@ -4,7 +4,7 @@ import '@/styles/globals.css'
 import { ThemeProvider } from '@/components/ui/theme-provider'
 import { Toaster } from "@/components/ui/toaster"
 import { getServerSession } from 'next-auth'
-import SessionProvider from '@/context/SessionProvider'
+import SessionProvider from '@/Providers/SessionProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 

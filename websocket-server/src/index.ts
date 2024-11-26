@@ -1,6 +1,7 @@
 import { createServer } from "http";
 import express from "express";
 import { Server } from "socket.io";
+import { Messages } from "./types/index";
 const PORT = 8530;
 const app = express();
 
@@ -12,8 +13,8 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-  console.log("Connection established");
-  socket.on("msg", (msg) => {
+  console.log("Connected to: ", socket.id);
+  socket.on("event:message", (msg: Messages) => {
     console.log(msg);
     io.emit(msg.receiverId, msg);
   });

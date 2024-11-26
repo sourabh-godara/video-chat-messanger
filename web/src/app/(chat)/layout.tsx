@@ -1,5 +1,5 @@
 import AppLayout from "@/components/AppLayout";
-import SocketProvider from "@/context";
+import SocketProvider from "@/Providers";
 
 export default function layout({
     children

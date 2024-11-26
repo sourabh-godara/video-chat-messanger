@@ -1,6 +1,8 @@
-import { Chat } from '@/components/chat/chat'
-import React from 'react'
+import { Chats } from '@/components/chat/Chats'
+import React, { useContext } from 'react'
 import { fetchChats } from '@/actions/chat-actions'
+import ChatHeader from '@/components/chat/ChatHeader'
+import { getUserIdFromSession } from '@/lib'
 
 type params = {
   params: {
@@ -9,12 +11,16 @@ type params = {
 }
 export default async function page({ params }: params) {
   const chat = await fetchChats(params.id);
+  const userId = await getUserIdFromSession();
   if (!chat) {
     return <p className='m-auto'>Something Went Wrong!</p>
   }
   return (
     <>
-      <Chat user={chat.user} chat={chat.messages} receiverId={params.id} />
+      <div className="flex-1 flex flex-col">
+        <ChatHeader user={chat.user} />
+        <Chats userId={userId} chat={chat.messages} receiverId={params.id} />
+      </div>
     </>
   )
 }

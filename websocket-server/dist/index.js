@@ -10,8 +10,8 @@ const io = new Server(httpServer, {
     },
 });
 io.on("connection", (socket) => {
-    console.log("Connection established");
-    socket.on("msg", (msg) => {
+    console.log("Connected to: ", socket.id);
+    socket.on("event:message", (msg) => {
         console.log(msg);
         io.emit(msg.receiverId, msg);
     });

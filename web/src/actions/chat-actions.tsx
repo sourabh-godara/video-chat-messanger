@@ -1,17 +1,8 @@
 'use server'
-import { authOptions } from "@/lib/authOptions";
+import { getUserIdFromSession } from "@/lib";
 import prisma from "@/lib/database"
 import { ChatType } from "@/types";
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-
-async function getUserIdFromSession() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user.id) {
-        throw new Error('User is not authenticated');
-    }
-    return session.user.id;
-}
 
 export async function fetchChats(friendId: string): Promise<ChatType | null> {
     const userId = await getUserIdFromSession();
