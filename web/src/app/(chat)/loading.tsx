@@ -1,6 +1,4 @@
 import * as React from "react"
-import { User } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -15,9 +13,6 @@ export default function Loading() {
                         <Skeleton className="h-3 w-32" />
                     </div>
                 </div>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                    <User className="h-5 w-5" />
-                </Button>
             </header>
             <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">

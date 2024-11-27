@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { ChatType } from "@/types";
-import { getUserIdFromSession } from '@/lib';
 const SOCKET_URL = process.env.NODE_ENV == 'production' ? process.env.NEXT_PUBLIC_SOCKET_SERVER : 'http://localhost:8530';
 
 interface SocketProviderProps {
@@ -37,7 +36,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
     const sendMessage: ISocketContext["sendMessage"] = useCallback(
         (message, receiverId) => {
-            console.log("Sending Message...")
             const trimmedMessage = message.trim();
             if (!trimmedMessage) return;
             if (socket && loggedInUserId) {

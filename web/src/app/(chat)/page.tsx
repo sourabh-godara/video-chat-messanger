@@ -1,9 +1,10 @@
+import { Sidebar } from '@/components/AppLayout'
 import React from 'react'
 
 export default function Page() {
     return (
         <>
-            <section className='flex h-full flex-col items-center justify-center rounded-lg border border-stone-200 dark:border-stone-800 dark:bg-stone-950'>
+            <section className='hidden md:flex h-full flex-col items-center justify-center rounded-lg border border-stone-200 dark:border-stone-800 dark:bg-stone-950'>
                 <h2 className='scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0 md:text-4xl'>
                     Welcome to ChatterBox
                 </h2>
@@ -14,6 +15,9 @@ export default function Page() {
                     conversations today!
                 </p>
             </section>
+            <div className='md:hidden'>
+                <Sidebar />
+            </div>
         </>
     )
 }
