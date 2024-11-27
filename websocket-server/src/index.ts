@@ -8,14 +8,17 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: [
+      "https://chatterbox.fun",
+      "https://video-chat-messanger.vercel.app",
+      "http://localhost:3000",
+    ],
   },
 });
 
 io.on("connection", (socket) => {
   console.log("Connected to: ", socket.id);
   socket.on("event:message", (msg: Messages) => {
-    console.log(msg);
     io.emit(msg.receiverId, msg);
   });
   socket.on("disconnect", () => {
@@ -24,7 +27,7 @@ io.on("connection", (socket) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("<h1>Welcome</h1>");
+  res.send("<h1>Server is running..</h1>");
   res.end();
 });
 

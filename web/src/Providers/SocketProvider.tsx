@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { ChatType } from "@/types";
+import { getUserIdFromSession } from '@/lib';
 const SOCKET_URL = process.env.NODE_ENV == 'production' ? process.env.NEXT_PUBLIC_SOCKET_SERVER : 'http://localhost:8530';
 
 interface SocketProviderProps {
@@ -26,10 +27,9 @@ export const useSocket = () => {
 };
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
-    const { data } = useSession();
-    let userId = data?.user.id;
+    const { data, status } = useSession();
     const [socket, setSocket] = useState<Socket>();
-    const [loggedInUserId, setLoggedInUserId] = useState<string>(userId)
+    const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatType['messages']>([]);
 
     const loadMessages: ISocketContext["loadMessages"] = (messages) => {
@@ -38,21 +38,24 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const sendMessage: ISocketContext["sendMessage"] = useCallback(
         (message, receiverId) => {
             console.log("Sending Message...")
-            if (socket) {
-                message.trim();
+            const trimmedMessage = message.trim();
+            if (!trimmedMessage) return;
+            if (socket && loggedInUserId) {
                 let newMessage = {
                     id: uuidv4(),
                     senderId: loggedInUserId,
                     receiverId: receiverId,
-                    content: message,
+                    content: trimmedMessage,
                     createdAt: new Date()
                 }
                 console.log('Message Sent: ', newMessage)
                 setMessages(prevMessages => [...prevMessages, newMessage])
                 socket.emit("event:message", newMessage);
+            } else {
+                console.error("User is not authenticated or socket is not connected.", { loggedInUserId });
             }
         },
-        [socket]
+        [socket, loggedInUserId]
     );
 
     const onMessageRec = useCallback((message: any) => {
@@ -62,16 +65,18 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     useEffect(() => {
         const _socket = io(SOCKET_URL);
-        _socket.on(loggedInUserId, onMessageRec);
-
+        if (status === 'authenticated' && data?.user.id) {
+            setLoggedInUserId(data.user.id)
+        }
         setSocket(_socket);
+        _socket.on(loggedInUserId!, onMessageRec);
 
         return () => {
             _socket.off("message", onMessageRec);
             _socket.disconnect();
             setSocket(undefined);
         };
-    }, []);
+    }, [loggedInUserId]);
 
     return (
         <SocketContext.Provider value={{ sendMessage, messages, loadMessages }}>

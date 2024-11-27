@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/ui/theme-provider'
 import { Toaster } from "@/components/ui/toaster"
 import { getServerSession } from 'next-auth'
 import SessionProvider from '@/Providers/SessionProvider'
+import { authOptions } from '@/lib/authOptions'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,7 +19,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   return (
     <html lang='en' suppressHydrationWarning>
       <body className={inter.className}>
