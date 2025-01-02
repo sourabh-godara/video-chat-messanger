@@ -1,8 +1,7 @@
 {
   "name": "@repo/prisma",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
-  "license": "MIT",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -10,15 +9,13 @@
   "scripts": {
     "db:generate": "prisma generate",
     "db:push": "prisma db push --skip-generate",
-    "postinstall": "prisma generate"
+    "build": "prisma generate"
   },
   "devDependencies": {
+    "@prisma/client": "^6.1.0",
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "typescript": "^5.7.2",
-    "prisma": "latest"
-  },
-  "dependencies": {
-    "@prisma/client": "latest"
+    "prisma": "latest",
+    "typescript": "^5.7.2"
   }
 }

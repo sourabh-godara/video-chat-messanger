@@ -2,26 +2,46 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "tasks": {
+    "build": {
+      "dependsOn": ["^build", "^db:generate"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NODE_ENV",
+        "NEXTAUTH_SECRET",
+        "NEXTAUTH_URL",
+        "DATABASE_URL"
+      ]
+    },
+    "server#build": {
+      "env": []
+    },
+    "web#build": {
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NODE_ENV",
+        "NEXTAUTH_SECRET",
+        "NEXTAUTH_URL"
+      ]
+    },
+    "@repo/prisma#build": {
+      "env": ["DATABASE_URL"]
+    },
     "db:generate": {
       "cache": false
     },
     "db:push": {
       "cache": false
     },
-    "build": {
-      "dependsOn": ["^db:generate", "^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
-    },
     "lint": {
       "dependsOn": ["^lint"]
     },
-    "check-types": {
-      "dependsOn": ["^check-types"]
-    },
     "dev": {
-      "dependsOn": ["^db:generate"],
       "cache": false,
+      "dependsOn": ["^db:generate"],
       "persistent": true
     }
   }
