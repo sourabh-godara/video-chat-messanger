@@ -19,7 +19,6 @@ async function fetchFriends(): Promise<FriendType[]> {
         const friends = res.map(f => f.friend);
         return friends
     } catch (error) {
-        console.log("Database Error: ", error)
         throw new Error('Something went wrong :(')
     }
 }

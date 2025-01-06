@@ -16,7 +16,7 @@
       ]
     },
     "server#build": {
-      "env": []
+      "env": ["REDIS_URL"]
     },
     "web#build": {
       "env": [
