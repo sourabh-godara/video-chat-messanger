@@ -1,33 +1,13 @@
 import React, { Suspense } from 'react'
-import { FriendType } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
-import prisma from '@repo/prisma'
-import { getUserIdFromSession } from '@/lib'
 import FriendItem from '../FriendItem'
+import { fetchFriends } from '@/actions/friend-action'
 
-async function fetchFriends(): Promise<FriendType[]> {
-    try {
-        const userId = await getUserIdFromSession();
-        const res = await prisma.friendship.findMany({
-            where: { userId },
-            include: {
-                friend: {
-                    select: { id: true, name: true, email: true, image: true }
-                }
-            }
-        });
-        const friends = res.map(f => f.friend);
-        return friends
-    } catch (error) {
-        throw new Error('Something went wrong :(')
-    }
-}
 export default async function ChatList() {
     const friends = await fetchFriends();
     return (
         <>
             <Suspense fallback={<LoadingSkeleton />}>
-
                 {friends?.map((friend) => (
                     <FriendItem key={friend.id} friend={friend} />
                 ))}

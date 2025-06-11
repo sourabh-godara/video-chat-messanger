@@ -1,52 +1,43 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Send } from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
-import { ChatType } from '@/types'
 import { useSocket } from '@/Providers/SocketProvider';
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from '@/components/ui/input'
+import { generatePrivateRoomId } from '@/app/lib'
+import { useSession } from 'next-auth/react'
 
 interface ChatProps {
-  userId: string;
-  chat: ChatType['messages']
   receiverId: string
 }
 
-export function Chats({ userId, chat, receiverId }: ChatProps) {
-  const { loadMessages, sendMessage, messages } = useSocket();
+
+export function Chats({ receiverId }: ChatProps) {
+  const { sendMessage, socket } = useSocket();
   const [newMessage, setNewMessage] = useState("");
+  const { data } = useSession();
+  const userId = data?.user.id
+  const roomId = generatePrivateRoomId(userId, receiverId);
   useEffect(() => {
-    loadMessages(chat);
+    if (!roomId || !socket) {
+      throw new Error("Something went wrong! Try again later.")
+    }
+    socket.emit("join-room", roomId)
+    return () => {
+      socket.emit("leave_room", roomId);
+    };
   }, [])
 
   return (
     <>
-
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages?.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.senderId === userId ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`rounded-lg px-4 py-2 max-w-[70%] ${message.senderId === userId ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                  }`}
-              >
-                {message.content}
-              </div>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
       <footer className="border-t border-border p-4">
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            sendMessage(newMessage, receiverId)
-            setNewMessage('');
+            if (newMessage.trim()) {
+              sendMessage(newMessage, receiverId, roomId)
+              setNewMessage('');
+            }
           }}
           className="flex space-x-2"
         >

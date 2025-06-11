@@ -3,17 +3,19 @@ import { useSession } from 'next-auth/react'
 import { v4 as uuidv4 } from 'uuid';
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { ChatType } from "@/types";
+import { ChatType, Message } from "@/types";
+import { decryptMessage, encrypt } from '@/app/lib/Encrypt';
 const SOCKET_URL = process.env.NODE_ENV == 'production' ? process.env.NEXT_PUBLIC_SOCKET_SERVER : 'http://localhost:8530';
 
 interface SocketProviderProps {
     children?: React.ReactNode;
 }
 
-interface ISocketContext {
-    loadMessages: (messages: ChatType['messages']) => any;
-    sendMessage: (message: string, receiverId: string) => any;
+export interface ISocketContext {
+    loadMessages: (messages: ChatType['messages']) => void;
+    sendMessage: (message: string, receiverId: string, roomId: string) => void;
     messages: ChatType['messages'];
+    socket: Socket | undefined;
 }
 
 const SocketContext = React.createContext<ISocketContext | null>(null);
@@ -28,56 +30,67 @@ export const useSocket = () => {
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const { data, status } = useSession();
     const [socket, setSocket] = useState<Socket>();
-    const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatType['messages']>([]);
 
     const loadMessages: ISocketContext["loadMessages"] = (messages) => {
-        setMessages(messages)
+        const decryptedMessages = messages.map((msg) => ({
+            ...msg,
+            content: decryptMessage(msg.content),
+        }))
+        setMessages(decryptedMessages)
     }
     const sendMessage: ISocketContext["sendMessage"] = useCallback(
-        (message, receiverId) => {
-            const trimmedMessage = message.trim();
-            if (!trimmedMessage) return;
-            if (socket && loggedInUserId) {
-                let newMessage = {
+        async (message, receiverId, roomId) => {
+
+            if (!socket || !data?.user.id) {
+                console.error("Something Went Wrong");
+                return;
+            }
+
+            try {
+                const encryptedMessage = await encrypt(message);
+                const newMessage = {
                     id: uuidv4(),
-                    senderId: loggedInUserId,
+                    senderId: data.user.id,
                     receiverId: receiverId,
-                    content: trimmedMessage,
-                    createdAt: new Date()
+                    content: encryptedMessage,
+                    createdAt: new Date(),
+                    roomId: roomId
                 }
-                console.log('Message Sent: ', newMessage)
-                setMessages(prevMessages => [...prevMessages, newMessage])
                 socket.emit("event:message", newMessage);
-            } else {
-                console.error("User is not authenticated or socket is not connected.", { loggedInUserId });
+
+            } catch (error) {
+                console.error("Failed to encrypt or send message:", error);
             }
         },
-        [socket, loggedInUserId]
+        [socket, data?.user.id]
     );
 
-    const onMessageRec = useCallback((message: any) => {
-        console.log('Message Received: ', message)
-        setMessages(prevMessages => [...prevMessages, message])
+    const onMessageRec = useCallback(async (message: Message) => {
+        message['content'] = await decryptMessage(message.content);
+        setMessages((prevMessages) => [...prevMessages, message]);
     }, []);
 
     useEffect(() => {
+        if (status !== 'authenticated' || !data?.user.id) return;
+
         const _socket = io(SOCKET_URL);
-        if (status === 'authenticated' && data?.user.id) {
-            setLoggedInUserId(data.user.id)
-        }
         setSocket(_socket);
-        _socket.on(loggedInUserId!, onMessageRec);
+
+        _socket.on("receive-message", onMessageRec);
+        _socket.on("connect_error", (err) => {
+            console.error("Socket connection error:", err);
+        });
 
         return () => {
-            _socket.off("message", onMessageRec);
+            _socket.off("receive-message", onMessageRec);
             _socket.disconnect();
             setSocket(undefined);
         };
-    }, [loggedInUserId]);
+    }, [status, data?.user.id]);
 
     return (
-        <SocketContext.Provider value={{ sendMessage, messages, loadMessages }}>
+        <SocketContext.Provider value={{ sendMessage, messages, loadMessages, socket }}>
             {children}
         </SocketContext.Provider>
     );

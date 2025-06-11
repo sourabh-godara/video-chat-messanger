@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/ui/theme-provider'
 import { Toaster } from "@/components/ui/toaster"
 import { getServerSession } from 'next-auth'
 import SessionProvider from '@/Providers/SessionProvider'
-import { authOptions } from '@/lib/authOptions'
+import { authOptions } from '@/app/lib/authOptions'
 
 const inter = Inter({ subsets: ['latin'] })
 

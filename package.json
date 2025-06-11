@@ -8,6 +8,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "prettier": "^3.2.5",
     "turbo": "latest",
     "typescript": "^5.6.3"
@@ -19,5 +20,9 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "server-only": "^0.0.1"
+  }
 }

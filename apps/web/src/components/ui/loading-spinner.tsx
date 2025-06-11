@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/app/lib/utils'
 import React from 'react'
 
 export default function LoadingSpinner({ className, text }: { className?: string | undefined; text?: string }) {

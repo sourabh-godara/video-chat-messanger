@@ -1,12 +1,13 @@
 'use server'
+import { verifySession } from '@/app/lib/verify-session';
 import { User } from '@/types';
-import { getUserIdFromSession } from '@/lib';
+
 import prisma from '@repo/prisma';
 
 export default async function searchUser(query: string): Promise<User[]> {
-    const loggedInUserId = await getUserIdFromSession();
-    if (!query || !loggedInUserId) {
-        throw new Error('Query and UserId are required');
+    const { userId } = await verifySession();
+    if (!query) {
+        throw new Error('Query is required');
     }
     try {
         const users = await prisma.user.findMany({
@@ -14,7 +15,7 @@ export default async function searchUser(query: string): Promise<User[]> {
                 AND: [
                     {
                         id: {
-                            notIn: [loggedInUserId],
+                            notIn: [userId],
                         },
                     },
                     {
@@ -27,7 +28,7 @@ export default async function searchUser(query: string): Promise<User[]> {
                         NOT: {
                             friendsInitiated: {
                                 some: {
-                                    friendId: loggedInUserId
+                                    friendId: userId
                                 }
                             }
                         }
@@ -36,7 +37,7 @@ export default async function searchUser(query: string): Promise<User[]> {
                         NOT: {
                             friendsAccepted: {
                                 some: {
-                                    userId: loggedInUserId
+                                    userId: userId
                                 }
                             }
                         }

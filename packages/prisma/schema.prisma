@@ -24,7 +24,7 @@ model User {
  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- friendRequestsSent  FriendRequest[] @relation("FriendRequestsSent")
+  friendRequestsSent  FriendRequest[] @relation("FriendRequestsSent")
   friendRequestsReceived FriendRequest[] @relation("FriendRequestsReceived")
   friendsInitiated      Friendship[]      @relation("UserFriendsInitiated")
   friendsAccepted       Friendship[]      @relation("UserFriendsAccepted")

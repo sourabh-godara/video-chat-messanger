@@ -1,14 +1,10 @@
 'use server'
-import { getUserIdFromSession } from "@/lib";
+import { verifySession } from "@/app/lib/verify-session";
 import { ChatType } from "@/types";
-import { redirect } from "next/navigation";
 import prisma from "@repo/prisma";
 
 export async function fetchChats(friendId: string): Promise<ChatType | null> {
-    const userId = await getUserIdFromSession();
-    if (!userId) {
-        throw new Error('User is not authenticated');
-    }
+    const { userId } = await verifySession();
     const friendship = await prisma.friendship.findFirst({
         where: {
             OR: [
@@ -19,7 +15,7 @@ export async function fetchChats(friendId: string): Promise<ChatType | null> {
     });
 
     if (!friendship) {
-        return redirect('/')
+        throw new Error('Page Not Found');
     }
 
     try {

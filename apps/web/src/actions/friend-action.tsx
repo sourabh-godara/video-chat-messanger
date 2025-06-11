@@ -1,20 +1,35 @@
 'use server'
 
-import { FriendRequestsType } from "@/types";
-import { getUserIdFromSession } from "@/lib";
+import { FriendRequestsType, FriendType } from "@/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import prisma from "@repo/prisma";
 import { FriendRequestStatus } from "@repo/prisma"
+import { verifySession } from "@/app/lib/verify-session";
 
+
+export async function fetchFriends(): Promise<FriendType[]> {
+    try {
+        const { userId } = await verifySession();
+        const res = await prisma.friendship.findMany({
+            where: { userId },
+            include: {
+                friend: {
+                    select: { id: true, name: true, email: true, image: true }
+                }
+            }
+        });
+        const friends = res.map(f => f.friend);
+        return friends
+    } catch (error) {
+        throw new Error('Something went wrong :(')
+    }
+}
 //NEED IMPROVEMENT
 export async function respondToFriendRequest(requestId: string, response: FriendRequestStatus) {
-    if (!requestId || !response) {
-        throw new Error('Request ID and response are required');
-    }
-
-    if (!(response in FriendRequestStatus)) {
-        throw new Error('Invalid response');
+    await verifySession();
+    if (!requestId || !(response in FriendRequestStatus)) {
+        throw new Error('Invalid Request');
     }
 
     try {
@@ -49,7 +64,8 @@ export async function respondToFriendRequest(requestId: string, response: Friend
 }
 
 export async function sendRequest(receiverEmail: string) {
-    const senderId = await getUserIdFromSession();
+    const { userId } = await verifySession();
+    const senderId = userId;
     if (!senderId || !receiverEmail) {
         throw new Error('Sender ID and receiver email are required');
     }
@@ -90,11 +106,7 @@ export async function sendRequest(receiverEmail: string) {
 
 export async function fetchFriendRequests(): Promise<FriendRequestsType> {
     try {
-        const userId = await getUserIdFromSession();
-
-        if (!userId) {
-            throw new Error('User is not authenticated');
-        }
+        const { userId } = await verifySession();
 
         const [receivedRequests, sentRequests] = await Promise.all([
             prisma.friendRequest.findMany({
@@ -122,7 +134,8 @@ export async function fetchFriendRequests(): Promise<FriendRequestsType> {
 
 export async function removeFriend(friendId: string) {
     try {
-        const userId = await getUserIdFromSession();
+        const { userId } = await verifySession();
+
         await prisma.friendship.deleteMany({
             where: {
                 OR: [
