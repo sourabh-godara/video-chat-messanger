@@ -10,7 +10,7 @@ interface ChatHeaderProps {
 
 export default function ChatHeader({ user }: ChatHeaderProps) {
     return (
-        <header className="border-b border-border p-4 flex items-center justify-between">
+        <header className="sticky top-0 z-50 border-b border-border bg-background p-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
                 <div className='flex items-center justify-center gap-2'>
                     <Link href={'/'} className='block md:hidden'>

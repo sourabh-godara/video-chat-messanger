@@ -79,7 +79,7 @@ async function initServer() {
         console.error(err);
         process.exit(1);
       })
-      .listen(PORT, () => {
+      .listen(PORT,'0.0.0.0', () => {
         console.log(`> Ready on http://localhost:${PORT}`);
       });
 
