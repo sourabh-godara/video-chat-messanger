@@ -1,9 +1,8 @@
-import { ChatInput } from "@/components/chat/ChatInput";
 import React from "react";
 import { fetchChats } from "@/actions/chat-actions";
 import ChatHeader from "@/components/chat/ChatHeader";
 import { getUserIdFromSession } from "@/lib";
-import MessageList from "@/components/chat/MessageList";
+import ChatRoom from "@/components/chat/ChatRoom";
 
 type params = {
   params: Promise<{ id: string }>;
@@ -18,10 +17,7 @@ export default async function page({ params }: params) {
   return (
     <div className="flex-1 flex flex-col">
       <ChatHeader user={chat.user} />
-      <div className="flex-1 overflow-y-auto">
-        <MessageList chat={chat.messages} userId={userId} />
-      </div>
-      <ChatInput receiverId={receiverId} />
+      <ChatRoom chat={chat.messages} receiverId={receiverId} userId={userId} />
     </div>
   );
 }

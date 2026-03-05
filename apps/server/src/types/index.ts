@@ -1,7 +1,7 @@
 export interface Messages {
   id: string;
   senderId: string;
-  receiverId: string;
+  roomId: string;
   content: string;
   createdAt: Date;
 }

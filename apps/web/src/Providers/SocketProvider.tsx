@@ -1,84 +1,171 @@
 "use client";
-import { useSession } from 'next-auth/react'
-import { v4 as uuidv4 } from 'uuid';
-import React, { useCallback, useContext, useEffect, useState } from "react";
+
+import { useSession } from "next-auth/react";
+import { v4 as uuidv4 } from "uuid";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  createContext,
+} from "react";
 import { io, Socket } from "socket.io-client";
 import { ChatType } from "@/types";
-const SOCKET_URL = process.env.NODE_ENV == 'production' ? process.env.NEXT_PUBLIC_SOCKET_SERVER : 'http://localhost:8530';
+
+type ChatMessage = ChatType["messages"][0];
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_SERVER || "http://localhost:8530";
 
 interface SocketProviderProps {
-    children?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 interface ISocketContext {
-    loadMessages: (messages: ChatType['messages']) => any;
-    sendMessage: (message: string, receiverId: string) => any;
-    messages: ChatType['messages'];
+  socket: Socket | undefined;
+  joinRoom: (roomId: string) => void;
+  loadMessages: (messages: ChatMessage[]) => void;
+  sendMessage: (message: string, roomId: string) => void;
+  joinedRooms: Set<string>;
+  messages: ChatMessage[];
 }
 
-const SocketContext = React.createContext<ISocketContext | null>(null);
+const SocketContext = createContext<ISocketContext | null>(null);
 
 export const useSocket = () => {
-    const state = useContext(SocketContext);
-    if (!state) throw new Error(`state is undefined`);
-
-    return state;
+  const context = useContext(SocketContext);
+  if (!context) {
+    throw new Error("useSocket must be used within a SocketProvider");
+  }
+  return context;
 };
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
-    const { data, status } = useSession();
-    const [socket, setSocket] = useState<Socket>();
-    const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
-    const [messages, setMessages] = useState<ChatType['messages']>([]);
-
-    const loadMessages: ISocketContext["loadMessages"] = (messages) => {
-        setMessages(messages)
+  const { data: session, status } = useSession();
+  const [socket, setSocket] = useState<Socket | undefined>();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messageQueue, setMessageQueue] = useState<
+    Record<string, ChatMessage[]>
+  >({}); // Queue per roomId with full messages
+  const [joinedRooms, setJoinedRooms] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.accessToken) {
+      return;
     }
-    const sendMessage: ISocketContext["sendMessage"] = useCallback(
-        (message, receiverId) => {
-            const trimmedMessage = message.trim();
-            if (!trimmedMessage) return;
-            if (socket && loggedInUserId) {
-                let newMessage = {
-                    id: uuidv4(),
-                    senderId: loggedInUserId,
-                    receiverId: receiverId,
-                    content: trimmedMessage,
-                    createdAt: new Date()
-                }
-                console.log('Message Sent: ', newMessage)
-                setMessages(prevMessages => [...prevMessages, newMessage])
-                socket.emit("event:message", newMessage);
-            } else {
-                console.error("User is not authenticated or socket is not connected.", { loggedInUserId });
-            }
-        },
-        [socket, loggedInUserId]
-    );
 
-    const onMessageRec = useCallback((message: any) => {
-        console.log('Message Received: ', message)
-        setMessages(prevMessages => [...prevMessages, message])
-    }, []);
+    const newSocket = io(SOCKET_URL, {
+      autoConnect: true,
+      auth: {
+        token: session?.accessToken ?? null,
+      },
+    });
 
-    useEffect(() => {
-        const _socket = io(SOCKET_URL);
-        if (status === 'authenticated' && data?.user.id) {
-            setLoggedInUserId(data.user.id)
+    setSocket(newSocket);
+    newSocket.on("connect", () => {
+      console.log("Socket successfully connected with ID:", newSocket.id);
+      // Any logic that should happen on connection can go here.
+      // For example, if you have a default room to join.
+    });
+
+    newSocket.on("join_success", (roomId: string) => {
+      setJoinedRooms((prev) => new Set([...prev, roomId]));
+      const queued = messageQueue[roomId] || [];
+      queued.forEach((newMessage) => {
+        newSocket.emit("send_message", newMessage);
+      }); // Send queued messages
+      setMessageQueue((prev) => {
+        const next = { ...prev };
+        delete next[roomId];
+        return next;
+      });
+      console.log(`Successfully joined room: ${roomId}`);
+    });
+
+    const handleReceiveMessage = (newMessage: ChatMessage) => {
+      console.log("Message received in client:", newMessage);
+      setMessages((prevMessages) => {
+        // Prevent duplicates if any
+        if (prevMessages.some((msg) => msg.id === newMessage.id)) {
+          return prevMessages;
         }
-        setSocket(_socket);
-        _socket.on(loggedInUserId!, onMessageRec);
+        return [...prevMessages, newMessage];
+      });
+    };
 
-        return () => {
-            _socket.off("message", onMessageRec);
-            _socket.disconnect();
-            setSocket(undefined);
-        };
-    }, [loggedInUserId]);
+    newSocket.on("receive_message", handleReceiveMessage);
+    newSocket.on("connect_error", (err) => {
+      console.error("❌ Socket connect error:", err.message);
+    });
+    newSocket.on("error", (err) => {
+      console.error("❌ Socket server error:", err);
+    });
+    return () => {
+      newSocket.off("connect");
+      newSocket.off("receive_message", handleReceiveMessage);
+      newSocket.disconnect();
+      setSocket(undefined);
+    };
+  }, [status, session]);
 
-    return (
-        <SocketContext.Provider value={{ sendMessage, messages, loadMessages }}>
-            {children}
-        </SocketContext.Provider>
-    );
+  const joinRoom = useCallback(
+    (roomId: string) => {
+      if (joinedRooms.has(roomId)) return;
+      socket?.emit("join_room", roomId);
+    },
+    [socket, joinedRooms]
+  );
+
+  const loadMessages = useCallback((initialMessages: ChatMessage[]) => {
+    setMessages(initialMessages);
+  }, []);
+
+  const sendMessage = useCallback(
+    (messageContent: string, roomId: string) => {
+      const trimmedMessage = messageContent.trim();
+      if (!trimmedMessage || !socket || !session?.user?.id) {
+        console.error(
+          "Cannot send message: not authenticated, socket not connected, or message is empty."
+        );
+        return;
+      }
+
+      const newMessage: ChatMessage = {
+        id: uuidv4(),
+        senderId: session.user.id,
+        roomId: roomId,
+        content: trimmedMessage,
+        createdAt: new Date(),
+      };
+
+      // Optimistic update
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+      if (!joinedRooms.has(roomId)) {
+        console.log(`Queuing message for room ${roomId} as not joined yet.`);
+        setMessageQueue((prev) => ({
+          ...prev,
+          [roomId]: [...(prev[roomId] || []), newMessage],
+        }));
+        joinRoom(roomId);
+        return;
+      }
+
+      socket.emit("send_message", newMessage);
+    },
+    [socket, session, joinedRooms, joinRoom]
+  );
+
+  return (
+    <SocketContext.Provider
+      value={{
+        socket,
+        joinRoom,
+        sendMessage,
+        messages,
+        loadMessages,
+        joinedRooms,
+      }}
+    >
+      {children}
+    </SocketContext.Provider>
+  );
 };
