@@ -1,6 +1,12 @@
-export * from "@prisma/client";
+export * from "../generated/client.js";
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../generated/client.js";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const connectionString = `${process.env.DATABASE_URL}`;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
 declare global {
   // allow global `var` declarations
@@ -12,10 +18,10 @@ let prisma: PrismaClient;
 
 if (typeof window === "undefined") {
   if (process.env.NODE_ENV === "production") {
-    prisma = new PrismaClient();
+    prisma = new PrismaClient({ adapter });
   } else {
     if (!global.prisma) {
-      global.prisma = new PrismaClient();
+      global.prisma = new PrismaClient({ adapter });
     }
 
     prisma = global.prisma;

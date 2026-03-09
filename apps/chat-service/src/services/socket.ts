@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
-import {  publisher, subscriber } from "./redisClient";
+import { publisher, subscriber } from "./redisClient";
 import { produceMessages } from "./kafka";
 import { verifySocketAuth } from "../utils/verifySocketAuth";
 import { checkRoomMembership } from "../utils/checkRoomMembership";
@@ -25,7 +25,7 @@ class SocketService {
         credentials: true,
       },
     });
-    console.log("Socket Service initialized."); 
+    console.log("Socket Service initialized.");
   }
 
   public async initListeners(): Promise<void> {
@@ -60,8 +60,8 @@ class SocketService {
   private async handleConnection(socket: AuthenticatedSocket): Promise<void> {
     console.log(`User connected: ${socket.id}, User ID: ${socket.userId}`);
 
-    await setOnlineUser(socket.userId,socket);
-    
+    await setOnlineUser(socket.userId, socket);
+
     socket.on("join_room", (roomId) => this.onJoinRoom(socket, roomId));
     socket.on("send_message", (message) => this.onSendMessage(socket, message));
     socket.on("typing", (data) => this.onTyping(socket, data));
@@ -122,7 +122,7 @@ class SocketService {
 
   private async onDisconnect(socket: AuthenticatedSocket): Promise<void> {
     console.log(`User disconnected: ${socket.id}, User ID: ${socket.userId}`);
-    await userOffline(socket.userId,socket);
+    await userOffline(socket.userId, socket);
   }
 
   get io(): Server {
