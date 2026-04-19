@@ -26,10 +26,10 @@ app.get("/online-users", async (req, res) => {
       },
     });
     const friend = friends.map((f) => f.friend);
-    return res.json({data:friend, message:'success'})
-  } catch (error:any) {
-    console.log({error})
-    return res.status(500).json({data:null, message:error.message})
+    return res.json({ data: friend, message: 'success' })
+  } catch (error: any) {
+    console.log({ error })
+    return res.status(500).json({ data: null, message: error.message })
   }
 });
 
