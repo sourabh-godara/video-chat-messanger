@@ -1,8 +1,8 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/store/authStore";
+import type { AuthUser } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
-const AUTH_URL = import.meta.env.VITE_AUTH_URL ?? "/auth";
 
 export const api = axios.create({
     baseURL: BASE_URL,
@@ -10,15 +10,11 @@ export const api = axios.create({
     headers: { "Content-Type": "application/json" },
 });
 
-
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = useAuthStore.getState().accessToken;
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
-
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -38,7 +34,11 @@ api.interceptors.response.use(
             _retry?: boolean;
         };
 
-        if (error.response?.status !== 401 || originalRequest._retry) {
+        if (
+            error.response?.status !== 401 ||
+            originalRequest._retry ||
+            originalRequest.url?.includes("/auth/refresh")
+        ) {
             return Promise.reject(error);
         }
 
@@ -55,22 +55,25 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
-            const { data } = await axios.post<{ accessToken: string }>(
-                `${AUTH_URL}/refresh`,
-                {},
-                { withCredentials: true }
-            );
-            const newToken = data.accessToken;
-            useAuthStore.getState().setAccessToken(newToken);
+            const { data } = await api.post<{
+                success: boolean;
+                data: { accessToken: string; user: AuthUser };
+            }>("/auth/refresh");
+
+            const newToken = data.data.accessToken;
+            useAuthStore.getState().setAuth(data.data.user, newToken);
             processQueue(null, newToken);
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return api(originalRequest);
         } catch (refreshError) {
             processQueue(refreshError, null);
             useAuthStore.getState().logout();
+            window.location.href = "/auth/signin";
             return Promise.reject(refreshError);
         } finally {
             isRefreshing = false;
         }
     }
 );
+
+export default api;

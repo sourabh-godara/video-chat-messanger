@@ -1,6 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import prisma from "@repo/prisma";
 import { requireAuth } from "../middleware/requireAuth";
+import { validate } from "../middleware/validate";
+import { sendRequestSchema, respondRequestSchema, requestIdParamSchema, friendIdParamSchema } from "../schemas/friends.schema";
 
 const router = Router();
 
@@ -17,7 +19,7 @@ router.get("/", async (req: Request, res: Response) => {
             },
         });
 
-        const friends = friendships.map((f) => f.friend);
+        const friends = friendships.map((f: typeof friendships[number]) => f.friend);
         res.json({ success: true, data: friends });
     } catch (err) {
         console.error("[GET /friends]", err);
@@ -59,14 +61,9 @@ router.get("/requests", async (req: Request, res: Response) => {
 });
 
 
-router.post("/requests", async (req: Request, res: Response) => {
+router.post("/requests", validate(sendRequestSchema), async (req: Request, res: Response) => {
     const senderId = req.user!.sub;
-    const { receiverId } = req.body as { receiverId?: string };
-
-    if (!receiverId) {
-        res.status(400).json({ success: false, error: "receiverId is required" });
-        return;
-    }
+    const { receiverId } = req.body as { receiverId: string };
 
     if (receiverId === senderId) {
         res.status(400).json({ success: false, error: "Cannot send a request to yourself" });
@@ -129,15 +126,10 @@ router.post("/requests", async (req: Request, res: Response) => {
 });
 
 
-router.patch("/requests/:requestId", async (req: Request, res: Response) => {
+router.patch("/requests/:requestId", validate(requestIdParamSchema, "params"), validate(respondRequestSchema), async (req: Request, res: Response) => {
     const userId = req.user!.sub;
     const { requestId } = req.params;
-    const { action } = req.body as { action?: "ACCEPTED" | "DECLINED" };
-
-    if (!action || !["ACCEPTED", "DECLINED"].includes(action)) {
-        res.status(400).json({ success: false, error: "action must be ACCEPTED or DECLINED" });
-        return;
-    }
+    const { action } = req.body as { action: "ACCEPTED" | "DECLINED" };
 
     try {
         const friendRequest = await prisma.friendRequest.findUnique({
@@ -208,7 +200,7 @@ router.delete("/requests/:requestId", async (req: Request, res: Response) => {
     }
 });
 
-router.delete("/:friendId", async (req: Request, res: Response) => {
+router.delete("/:friendId", validate(friendIdParamSchema, "params"), async (req: Request, res: Response) => {
     const userId = req.user!.sub;
     const { friendId } = req.params;
 

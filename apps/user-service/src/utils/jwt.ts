@@ -1,15 +1,12 @@
 import jwt from "jsonwebtoken";
+import type { JwtPayload } from "@repo/types";
+
+export type { JwtPayload };
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
 const ACCESS_EXPIRES = "15m";
 const REFRESH_EXPIRES = "7d";
-
-export interface JwtPayload {
-    sub: string;   // userId
-    email: string;
-    name: string | null;
-}
 
 // ─── Access Token ─────────────────────────────────────────────────────────────
 // Short-lived (15min), stored in memory on the client

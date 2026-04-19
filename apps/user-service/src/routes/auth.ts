@@ -9,13 +9,17 @@ import {
     verifyRefreshToken,
     signResetToken,
     verifyResetToken,
+    verifyAccessToken,
 } from "../utils/jwt";
 import { setRefreshCookie, clearRefreshCookie, getRefreshCookie } from "../utils/cookies";
 import { sendPasswordResetEmail } from "../utils/email";
+import { validate } from "../middleware/validate";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "../schemas/auth.schema";
 
 const router = Router();
 
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:3000";
+const SERVER_URL = process.env.SERVER_URL ?? "http://localhost:8531";
 const BCRYPT_ROUNDS = 12;
 
 
@@ -32,7 +36,8 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            callbackURL: `${process.env.SERVER_URL ?? "http://localhost:8530"}/auth/google/callback`,
+            // Must match exactly what's registered in Google Console
+            callbackURL: `${SERVER_URL}/api/auth/google/callback`,
         },
         async (_accessToken, _refreshToken, profile: Profile, done) => {
             try {
@@ -50,9 +55,16 @@ passport.use(
                         name: profile.displayName,
                         image: profile.photos?.[0]?.value ?? null,
                     },
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        image: true,
+                        passwordHash: true,
+                    },
                 });
 
-                return done(null, user);
+                return null//done(null, user);
             } catch (err) {
                 return done(err as Error);
             }
@@ -61,22 +73,12 @@ passport.use(
 );
 
 
-router.post("/register", async (req: Request, res: Response) => {
+router.post("/register", validate(registerSchema), async (req: Request, res: Response) => {
     const { name, email, password } = req.body as {
-        name?: string;
-        email?: string;
-        password?: string;
+        name: string;
+        email: string;
+        password: string;
     };
-
-    if (!name?.trim() || !email || !password) {
-        res.status(400).json({ success: false, error: "Name, email and password are required" });
-        return;
-    }
-
-    if (password.length < 8) {
-        res.status(400).json({ success: false, error: "Password must be at least 8 characters" });
-        return;
-    }
 
     try {
         const existing = await prisma.user.findUnique({ where: { email } });
@@ -107,13 +109,8 @@ router.post("/register", async (req: Request, res: Response) => {
 });
 
 
-router.post("/login", async (req: Request, res: Response) => {
-    const { email, password } = req.body as { email?: string; password?: string };
-
-    if (!email || !password) {
-        res.status(400).json({ success: false, error: "Email and password are required" });
-        return;
-    }
+router.post("/login", validate(loginSchema), async (req: Request, res: Response) => {
+    const { email, password } = req.body as { email: string; password: string };
 
     try {
         const user = await prisma.user.findUnique({ where: { email } });
@@ -157,7 +154,7 @@ router.get(
     "/google/callback",
     passport.authenticate("google", { session: false, failureRedirect: `${CLIENT_URL}/auth/signin?error=oauth` }),
     (req: Request, res: Response) => {
-        const user = req.user as {
+        const user = req.user as unknown as {
             id: string;
             email: string;
             name: string | null;
@@ -216,116 +213,103 @@ router.post("/refresh", async (req: Request, res: Response) => {
 });
 
 
-router.post("/logout", (req: Request, res: Response) => {
+router.post("/logout", (_req: Request, res: Response) => {
     clearRefreshCookie(res);
     res.json({ success: true, data: null });
 });
 
 
-router.get("/me", async (req: Request, res: Response) => {
-    const authHeader = req.headers.authorization;
+router.post(
+    "/forgot-password",
+    validate(forgotPasswordSchema),
+    async (req: Request, res: Response) => {
+        const { email } = req.body as { email: string };
 
-    if (!authHeader?.startsWith("Bearer ")) {
-        res.status(401).json({ success: false, error: "No token provided" });
-        return;
-    }
+        // Always return the same response — never leak whether email exists
+        const genericResponse = () =>
+            res.json({
+                success: true,
+                data: { message: "If that email exists, a reset link has been sent" },
+            });
 
-    try {
-        const { verifyAccessToken } = await import("../utils/jwt");
-        const payload = verifyAccessToken(authHeader.slice(7));
+        try {
+            const user = await prisma.user.findUnique({
+                where: { email },
+                select: { id: true, email: true, passwordHash: true },
+            });
 
-        const user = await prisma.user.findUnique({
-            where: { id: payload.sub },
-            select: { id: true, email: true, name: true, image: true },
-        });
+            if (!user || !user.passwordHash) {
+                genericResponse();
+                return;
+            }
 
-        if (!user) {
-            res.status(404).json({ success: false, error: "User not found" });
-            return;
-        }
+            const resetToken = signResetToken(user.id, user.passwordHash);
+            const resetUrl = `${CLIENT_URL}/auth/reset-password?token=${resetToken}`;
 
-        res.json({ success: true, data: makePublicUser(user) });
-    } catch {
-        res.status(401).json({ success: false, error: "Invalid token" });
-    }
-});
+            // Fire and forget — don't block response on SMTP
+            sendPasswordResetEmail(user.email, resetUrl).catch((err) =>
+                console.error("[email] Failed to send reset email", err)
+            );
 
-
-router.post("/forgot-password", async (req: Request, res: Response) => {
-    const { email } = req.body as { email?: string };
-
-    if (!email) {
-        res.status(400).json({ success: false, error: "Email is required" });
-        return;
-    }
-
-    const genericResponse = () =>
-        res.json({ success: true, data: { message: "If that email exists, a reset link has been sent" } });
-
-    try {
-        const user = await prisma.user.findUnique({
-            where: { email },
-            select: { id: true, email: true, passwordHash: true },
-        });
-
-        if (!user || !user.passwordHash) {
             genericResponse();
-            return;
+        } catch (err) {
+            console.error("[POST /auth/forgot-password]", err);
+            genericResponse();
         }
-
-        const resetToken = signResetToken(user.id, user.passwordHash);
-        const resetUrl = `${CLIENT_URL}/auth/reset-password?token=${resetToken}`;
-
-        await sendPasswordResetEmail(user.email, resetUrl);
-
-        genericResponse();
-    } catch (err) {
-        console.error("[POST /auth/forgot-password]", err);
-        genericResponse();
     }
-});
+);
 
-router.post("/reset-password", async (req: Request, res: Response) => {
-    const { token, password } = req.body as { token?: string; password?: string };
+router.post(
+    "/reset-password",
+    validate(resetPasswordSchema),
+    async (req: Request, res: Response) => {
+        const { token, password } = req.body as { token: string; password: string };
 
-    if (!token || !password) {
-        res.status(400).json({ success: false, error: "Token and password are required" });
-        return;
-    }
+        try {
+            const payloadPart = token.split(".")[1];
+            if (!payloadPart) {
+                res.status(400).json({
+                    success: false,
+                    error: "Reset link is invalid or has expired",
+                });
+                return;
+            }
 
-    if (password.length < 8) {
-        res.status(400).json({ success: false, error: "Password must be at least 8 characters" });
-        return;
-    }
+            const decoded = JSON.parse(
+                Buffer.from(payloadPart, "base64url").toString()
+            ) as { sub: string };
 
-    try {
-        const decoded = JSON.parse(
-            Buffer.from(token.split(".")[1], "base64url").toString()
-        ) as { sub: string };
+            const user = await prisma.user.findUnique({
+                where: { id: decoded.sub },
+                select: { id: true, passwordHash: true },
+            });
 
-        const user = await prisma.user.findUnique({
-            where: { id: decoded.sub },
-            select: { id: true, passwordHash: true },
-        });
+            if (!user || !user.passwordHash) {
+                res.status(400).json({
+                    success: false,
+                    error: "Reset link is invalid or has expired",
+                });
+                return;
+            }
 
-        if (!user || !user.passwordHash) {
-            res.status(400).json({ success: false, error: "Reset link is invalid or has expired" });
-            return;
+            // Verifies signature using old hash — auto-invalidates after password change
+            verifyResetToken(token, user.passwordHash);
+
+            const newHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { passwordHash: newHash },
+            });
+
+            res.json({ success: true, data: { message: "Password updated successfully" } });
+        } catch {
+            res.status(400).json({
+                success: false,
+                error: "Reset link is invalid or has expired",
+            });
         }
-
-        verifyResetToken(token, user.passwordHash);
-
-        const newHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { passwordHash: newHash },
-        });
-
-        res.json({ success: true, data: { message: "Password updated successfully" } });
-    } catch {
-        res.status(400).json({ success: false, error: "Reset link is invalid or has expired" });
     }
-});
+);
 
 export default router;

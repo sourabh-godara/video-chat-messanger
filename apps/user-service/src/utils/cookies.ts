@@ -9,12 +9,12 @@ export function setRefreshCookie(res: Response, token: string) {
         secure: IS_PROD,         // HTTPS only in production
         sameSite: IS_PROD ? "strict" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
-        path: "/auth",           // only sent on /auth/* routes — reduces attack surface
+        path: "/api/auth",           // only sent on /auth/* routes — reduces attack surface
     });
 }
 
 export function clearRefreshCookie(res: Response) {
-    res.clearCookie(COOKIE_NAME, { path: "/auth" });
+    res.clearCookie(COOKIE_NAME, { path: "/api/auth" });
 }
 
 export function getRefreshCookie(cookies: Record<string, string>): string | undefined {

@@ -1,7 +1,2 @@
-export interface Messages {
-  id: string;
-  senderId: string;
-  roomId: string;
-  content: string;
-  createdAt: Date;
-}
+// Re-export shared message type from @repo/types.
+export type { ChatMessage as Messages } from "@repo/types";

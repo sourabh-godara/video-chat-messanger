@@ -13,8 +13,12 @@
     "db:deploy": "prisma migrate deploy",
     "build": "prisma generate"
   },
-  "devDependencies": {
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@types/pg": "^8.18.0",
@@ -22,10 +26,5 @@
     "prisma": "^7.4.2",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2"
-  },
-  "dependencies": {
-    "@prisma/adapter-pg": "^7.4.2",
-    "@prisma/extension-accelerate": "^2.0.2",
-    "pg": "^8.20.0"
   }
 }

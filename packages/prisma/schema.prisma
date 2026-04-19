@@ -1,6 +1,8 @@
 generator client {
-  provider = "prisma-client"
-  output   = "./generated"
+  provider               = "prisma-client"
+  output                 = "./generated"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
 }
 
 datasource db {
@@ -8,9 +10,9 @@ datasource db {
 }
 
 model User {
-  id            String          @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String          @unique
+  email         String    @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -29,7 +31,7 @@ model User {
   blockedBy              BlockedUser[]   @relation("Blocking")
 
   // Messaging
-  messagesSent Message[] @relation("MessagesSent")
+  messagesSent Message[]    @relation("MessagesSent")
   rooms        RoomMember[]
 
   @@index([name])
@@ -37,20 +39,20 @@ model User {
 }
 
 model Room {
-  id        String       @id
+  id        String   @id
   name      String?
-  isGroup   Boolean      @default(false)
-  createdAt DateTime     @default(now())
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   // Users in this room
-  members   RoomMember[]
-  messages  Message[]
+  members  RoomMember[]
+  messages Message[]
 }
 
 model RoomMember {
-  id      String   @id @default(cuid())
-  userId  String
-  roomId  String
+  id       String   @id @default(cuid())
+  userId   String
+  roomId   String
   joinedAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
@@ -74,11 +76,11 @@ model Message {
 }
 
 model FriendRequest {
-  id         String               @id @default(cuid())
+  id         String              @id @default(cuid())
   senderId   String
   receiverId String
-  status     FriendRequestStatus  @default(PENDING)
-  createdAt  DateTime @default(now())
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
 
   sender   User @relation("FriendRequestsSent", fields: [senderId], references: [id])
   receiver User @relation("FriendRequestsReceived", fields: [receiverId], references: [id])
@@ -121,12 +123,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?  @db.Text
-  access_token      String?  @db.Text
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?  @db.Text
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

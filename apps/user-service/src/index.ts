@@ -23,9 +23,9 @@ app.get("/health", (_req, res) => {
     res.json({ success: true, data: { service: "user-service", status: "ok" } });
 });
 
-app.use("/auth", authRouter);
-app.use("/users", usersRouter);
-app.use("/friends", friendsRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/friends", friendsRouter);
 
 app.use((_req, res) => {
     res.status(404).json({ success: false, error: "Route not found" });

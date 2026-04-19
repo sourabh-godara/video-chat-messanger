@@ -1,6 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import prisma from "@repo/prisma";
 import { requireAuth } from "../middleware/requireAuth";
+import { validate } from "../middleware/validate";
+import { updateProfileSchema, searchQuerySchema, userIdParamSchema } from "../schemas/users.schema";
 
 const router = Router();
 
@@ -25,13 +27,8 @@ router.get("/me", async (req: Request, res: Response) => {
     }
 });
 
-router.patch("/me", async (req: Request, res: Response) => {
+router.patch("/me", validate(updateProfileSchema), async (req: Request, res: Response) => {
     const { name, image } = req.body as { name?: string; image?: string };
-
-    if (!name?.trim() && !image) {
-        res.status(400).json({ success: false, error: "Nothing to update" });
-        return;
-    }
 
     try {
         const updated = await prisma.user.update({
@@ -50,14 +47,9 @@ router.patch("/me", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/search", async (req: Request, res: Response) => {
-    const query = (req.query.q as string)?.trim();
+router.get("/search", validate(searchQuerySchema, "query"), async (req: Request, res: Response) => {
+    const query = (req.query.q as string).trim();
     const userId = req.user!.sub;
-
-    if (!query || query.length < 1) {
-        res.status(400).json({ success: false, error: "Search query is required" });
-        return;
-    }
 
     try {
         const users = await prisma.user.findMany({
@@ -99,7 +91,7 @@ router.get("/search", async (req: Request, res: Response) => {
             take: 10,
         });
 
-        const result = users.map((u) => ({
+        const result = users.map((u: typeof users[number]) => ({
             id: u.id,
             name: u.name,
             email: u.email,
@@ -115,7 +107,7 @@ router.get("/search", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", validate(userIdParamSchema, "params"), async (req: Request, res: Response) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.params.id },

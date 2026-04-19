@@ -8,13 +8,13 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/User'
-export type * from './models/Room'
-export type * from './models/RoomMember'
-export type * from './models/Message'
-export type * from './models/FriendRequest'
-export type * from './models/Friendship'
-export type * from './models/BlockedUser'
-export type * from './models/Account'
-export type * from './models/Session'
-export type * from './commonInputTypes'
+export type * from './models/User.ts'
+export type * from './models/Room.ts'
+export type * from './models/RoomMember.ts'
+export type * from './models/Message.ts'
+export type * from './models/FriendRequest.ts'
+export type * from './models/Friendship.ts'
+export type * from './models/BlockedUser.ts'
+export type * from './models/Account.ts'
+export type * from './models/Session.ts'
+export type * from './commonInputTypes.ts'

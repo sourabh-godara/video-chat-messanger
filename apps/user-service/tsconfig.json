@@ -1,7 +1,17 @@
 {
-    "extends": "@repo/typescript-config/base.json",
+    "extends": "@repo/typescript-config/node16.json",
     "compilerOptions": {
-        "rootDir": "./src",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "target": "ES2023",
         "outDir": "./dist",
-    }
+        "noEmit": false
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
 }

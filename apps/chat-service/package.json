@@ -4,7 +4,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "dev": "tsc-watch --onSuccess \"node --env-file=.env ./dist/index.js\"",
+    "dev": "tsx watch --env-file=.env src/index.ts",
     "build": "tsc",
     "start": "node --env-file=.env ./dist/index.js",
     "check-types": "tsc --noEmit"
@@ -15,8 +15,10 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@repo/types": "*",
     "@socket.io/redis-adapter": "^8.3.0",
     "express": "^4.21.1",
+    "tsx": "^4.21.0",
     "ioredis": "^5.8.0",
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",

@@ -1,11 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyAccessToken, type JwtPayload } from "../utils/jwt";
+import { verifyAccessToken } from "../utils/jwt";
+import type { JwtPayload } from "@repo/types";
 
 declare global {
     namespace Express {
-        interface Request {
-            user?: JwtPayload;
-        }
+        interface User extends JwtPayload {}
     }
 }
 
